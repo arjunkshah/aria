@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConnectedRepo, AppSettings, Notification } from '../types';
 import { GithubIcon, PlusIcon, SettingsIcon, BellIcon } from './Icons';
+import Logo from './Logo';
 
 interface RepoGalleryProps {
   connectedRepos: ConnectedRepo[];
@@ -15,14 +16,14 @@ interface RepoGalleryProps {
 
 const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo, onClick }) => (
   <motion.div
-    whileHover={{ scale: 1.02 }}
+    whileHover={{ scale: 1.02, y: -2 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all card"
+    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all card group"
   >
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-background rounded-xl shadow-clay flex items-center justify-center">
+        <div className="w-12 h-12 bg-background rounded-xl shadow-clay flex items-center justify-center group-hover:shadow-clay-inset transition-all">
           <GithubIcon className="w-6 h-6 text-text-secondary" />
         </div>
         <div>
@@ -41,7 +42,7 @@ const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo
     
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
         <span className="text-sm text-text-secondary font-inter">Connected</span>
       </div>
       <div className="text-xs text-text-secondary font-inter">
@@ -53,13 +54,13 @@ const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo
 
 const ConnectRepoCard: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <motion.div
-    whileHover={{ scale: 1.02 }}
+    whileHover={{ scale: 1.02, y: -2 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all border-dashed card"
+    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all border-dashed border-2 card group"
   >
     <div className="flex flex-col items-center justify-center h-full text-center">
-      <div className="w-12 h-12 bg-background rounded-xl shadow-clay flex items-center justify-center mb-4">
+      <div className="w-12 h-12 bg-background rounded-xl shadow-clay flex items-center justify-center mb-4 group-hover:shadow-clay-inset transition-all">
         <PlusIcon className="w-6 h-6 text-primary" />
       </div>
       <h3 className="text-lg font-bold text-text-strong mb-2 font-inter">Connect Repository</h3>
@@ -111,9 +112,9 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
         </div>
         <div className="flex items-center gap-4">
           {unreadNotifications.length > 0 && (
-            <button className="relative">
+            <button className="relative p-2 rounded-lg hover:bg-background-secondary transition-colors">
               <BellIcon className="w-6 h-6 text-text-secondary" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-400 rounded-full text-xs text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-400 rounded-full text-xs text-white flex items-center justify-center font-bold">
                 {unreadNotifications.length}
               </span>
             </button>
@@ -142,13 +143,24 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
 
       {/* Connect Modal */}
       {showConnectModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="bg-background-secondary rounded-2xl p-8 shadow-clay max-w-md w-full mx-4 card"
           >
-            <h2 className="text-2xl font-bold text-text-strong mb-6 font-inter">Connect Repository</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-strong font-inter">Connect Repository</h2>
+              <button
+                onClick={() => setShowConnectModal(false)}
+                className="text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-background"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <form onSubmit={handleConnect} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2 font-inter">

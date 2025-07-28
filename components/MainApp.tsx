@@ -8,6 +8,7 @@ import RepoGallery from './RepoGallery';
 import Settings from './Settings';
 import ChangelogDisplay from './ChangelogDisplay';
 import AriaChat from './AriaChat';
+import Logo from './Logo';
 import { BookOpenIcon, ZapIcon, ArrowPathIcon, BellIcon } from './Icons';
 
 const MainApp: React.FC = () => {
@@ -231,111 +232,137 @@ const MainApp: React.FC = () => {
     // Show gallery if no repo is selected
     if (!selectedRepo) {
         return (
-            <RepoGallery
-                connectedRepos={connectedRepos}
-                settings={settings}
-                notifications={notifications}
-                onConnectRepo={handleConnectRepo}
-                onSelectRepo={handleSelectRepo}
-                onOpenSettings={() => setShowSettings(true)}
-                onMarkNotificationRead={handleMarkNotificationRead}
-            />
-        );
-    }
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-150px)]">
-            {/* Left Column: History */}
-            <motion.div 
-                className="lg:col-span-3 bg-background-secondary rounded-2xl p-4 shadow-clay-inset border border-border flex flex-col card"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-            >
-                <div className="flex-shrink-0 border-b border-border pb-3 mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-bold text-text-strong flex items-center gap-2 font-inter">
-                            <BookOpenIcon className="w-5 h-5"/>
-                            Changelog History
-                        </h2>
-                        <button
-                            onClick={() => setSelectedRepo(null)}
-                            className="text-xs text-text-secondary hover:text-text-primary font-inter"
-                        >
-                            ← Back to Gallery
-                        </button>
+            <div className="min-h-screen bg-background">
+                {/* Header */}
+                <header className="border-b border-border bg-background-secondary/50 backdrop-blur-sm">
+                    <div className="max-w-7xl mx-auto px-6 py-4">
+                        <Logo size="lg" />
                     </div>
-                    <p className="text-xs text-text-secondary font-inter">{selectedRepo.owner}/{selectedRepo.name}</p>
-                </div>
-                <div className="flex-grow overflow-y-auto space-y-2 pr-2">
-                    {selectedRepo.changelogs.map(h => (
-                        <motion.button 
-                            key={h.id} 
-                            onClick={() => setSelectedChangelog(h)} 
-                            className={`w-full text-left p-3 rounded-lg transition-all font-inter ${selectedChangelog?.id === h.id ? 'bg-primary/20 text-text-strong' : 'hover:bg-background/50 text-text-primary'}`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <p className="font-bold">{h.version}</p>
-                            <p className="text-xs text-text-secondary">{new Date(h.date).toLocaleDateString()}</p>
-                        </motion.button>
-                    ))}
-                </div>
-                <div className="flex-shrink-0 pt-4 border-t border-border">
-                    <div className="space-y-3">
-                        <input
-                            type="text"
-                            value={newVersion}
-                            onChange={(e) => setNewVersion(e.target.value)}
-                            placeholder="New version (e.g. v1.2.4)"
-                            className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
-                        />
-                        <button
-                            onClick={handleGenerate}
-                            disabled={status === 'loading'}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed btn-primary font-inter"
-                        >
-                            {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
-                            {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
-                        </button>
-                    </div>
-                    {error && <p className="text-red-400 text-xs mt-2 text-center font-inter">{error}</p>}
-                </div>
-            </motion.div>
-
-            {/* Middle Column: Display */}
-            <motion.div 
-                className="lg:col-span-5 h-full overflow-y-auto pr-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-            >
-                <ChangelogDisplay changelog={selectedChangelog?.changelog || null} version={selectedChangelog?.version || 'v1.0.0'} />
-            </motion.div>
-
-            {/* Right Column: Chat */}
-            <motion.div 
-                className="lg:col-span-4 h-full"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-            >
-                <AriaChat 
-                    currentChangelog={selectedChangelog?.changelog || null}
-                    onSendMessage={handleAriaSendMessage}
-                    chatHistory={chatHistory}
-                    isEditing={isEditing}
+                </header>
+                
+                <RepoGallery
+                    connectedRepos={connectedRepos}
+                    settings={settings}
+                    notifications={notifications}
+                    onConnectRepo={handleConnectRepo}
+                    onSelectRepo={handleSelectRepo}
+                    onOpenSettings={() => setShowSettings(true)}
+                    onMarkNotificationRead={handleMarkNotificationRead}
                 />
-            </motion.div>
-
-            {/* Settings Modal */}
-            {showSettings && (
+                
                 <Settings
                     settings={settings}
                     onSaveSettings={handleSaveSettings}
                     onClose={() => setShowSettings(false)}
+                    isOpen={showSettings}
                 />
-            )}
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-background">
+            {/* Header */}
+            <header className="border-b border-border bg-background-secondary/50 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <Logo size="md" />
+                        <button
+                            onClick={() => setSelectedRepo(null)}
+                            className="text-sm text-text-secondary hover:text-text-primary transition-colors font-inter"
+                        >
+                            ← Back to Gallery
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-150px)] p-6">
+                {/* Left Column: History */}
+                <motion.div 
+                    className="lg:col-span-3 bg-background-secondary rounded-2xl p-4 shadow-clay-inset border border-border flex flex-col card"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                    <div className="flex-shrink-0 border-b border-border pb-3 mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-lg font-bold text-text-strong flex items-center gap-2 font-inter">
+                                <BookOpenIcon className="w-5 h-5"/>
+                                Changelog History
+                            </h2>
+                        </div>
+                        <p className="text-xs text-text-secondary font-inter">{selectedRepo.owner}/{selectedRepo.name}</p>
+                    </div>
+                    <div className="flex-grow overflow-y-auto space-y-2 pr-2">
+                        {selectedRepo.changelogs.map(h => (
+                            <motion.button 
+                                key={h.id} 
+                                onClick={() => setSelectedChangelog(h)} 
+                                className={`w-full text-left p-3 rounded-lg transition-all font-inter ${selectedChangelog?.id === h.id ? 'bg-primary/20 text-text-strong' : 'hover:bg-background/50 text-text-primary'}`}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <p className="font-bold">{h.version}</p>
+                                <p className="text-xs text-text-secondary">{new Date(h.date).toLocaleDateString()}</p>
+                            </motion.button>
+                        ))}
+                    </div>
+                    <div className="flex-shrink-0 pt-4 border-t border-border">
+                        <div className="space-y-3">
+                            <input
+                                type="text"
+                                value={newVersion}
+                                onChange={(e) => setNewVersion(e.target.value)}
+                                placeholder="New version (e.g. v1.2.4)"
+                                className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
+                            />
+                            <button
+                                onClick={handleGenerate}
+                                disabled={status === 'loading'}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed btn-primary font-inter"
+                            >
+                                {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
+                                {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
+                            </button>
+                        </div>
+                        {error && <p className="text-red-400 text-xs mt-2 text-center font-inter">{error}</p>}
+                    </div>
+                </motion.div>
+
+                {/* Middle Column: Display */}
+                <motion.div 
+                    className="lg:col-span-5 h-full overflow-y-auto pr-2"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                    <ChangelogDisplay changelog={selectedChangelog?.changelog || null} version={selectedChangelog?.version || 'v1.0.0'} />
+                </motion.div>
+
+                {/* Right Column: Chat */}
+                <motion.div 
+                    className="lg:col-span-4 h-full"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                    <AriaChat 
+                        currentChangelog={selectedChangelog?.changelog || null}
+                        onSendMessage={handleAriaSendMessage}
+                        chatHistory={chatHistory}
+                        isEditing={isEditing}
+                    />
+                </motion.div>
+            </div>
+
+            {/* Settings Modal */}
+            <Settings
+                settings={settings}
+                onSaveSettings={handleSaveSettings}
+                onClose={() => setShowSettings(false)}
+                isOpen={showSettings}
+            />
         </div>
     );
 };
