@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aria - AI Changelog Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --background: 222 47% 11%; /* hsl(222, 47%, 11%) */
+        --background-secondary: 222 47% 15%;
+        --primary: 262 82% 60%;
+        --border: 217 33% 22%;
+        --text-primary: 215 20% 65%;
+        --text-secondary: 215 20% 45%;
+        --text-strong: 210 40% 96%;
+        --shadow-1: 222 47% 5%;
+        --shadow-2: 222 47% 20%;
+      }
+      html:not(.dark) {
+        --background: 0 0% 96%; /* hsl(0, 0%, 96%) */
+        --background-secondary: 0 0% 100%;
+        --primary: 262 82% 55%;
+        --border: 0 0% 90%;
+        --text-primary: 222 20% 40%;
+        --text-secondary: 222 20% 55%;
+        --text-strong: 222 47% 11%;
+        --shadow-1: 0 0% 85%;
+        --shadow-2: 0 0% 100%;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              background: 'hsl(var(--background) / <alpha-value>)',
+              'background-secondary': 'hsl(var(--background-secondary) / <alpha-value>)',
+              primary: 'hsl(var(--primary) / <alpha-value>)',
+              border: 'hsl(var(--border) / <alpha-value>)',
+              'text-primary': 'hsl(var(--text-primary) / <alpha-value>)',
+              'text-secondary': 'hsl(var(--text-secondary) / <alpha-value>)',
+              'text-strong': 'hsl(var(--text-strong) / <alpha-value>)',
+            },
+            boxShadow: {
+              'clay': '8px 8px 16px hsl(var(--shadow-1) / 0.8), -8px -8px 16px hsl(var(--shadow-2) / 0.8)',
+              'clay-inset': 'inset 6px 6px 12px hsl(var(--shadow-1) / 0.8), inset -6px -6px 12px hsl(var(--shadow-2) / 0.8)',
+            }
+          }
+        }
+      }
+    </script>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@^18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@^1.11.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.25.1",
+    "framer-motion": "https://esm.sh/framer-motion@11.3.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

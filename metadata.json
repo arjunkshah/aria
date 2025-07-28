@@ -1,0 +1,5 @@
+{
+  "name": "Aria - AI Changelog Companion",
+  "description": "Connect your GitHub repository to automatically generate beautiful, categorized changelogs from your merged pull requests. Features a landing page, real-time updates, changelog history, and 'Aria', an AI chat companion to help you refine and perfect your release notes.",
+  "requestFramePermissions": []
+}
