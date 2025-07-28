@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState } from '../types';
+import { authService, firestoreService } from '../services/firebase';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -53,23 +54,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('aria_token');
-        if (token) {
-          // Verify token with backend
-          const response = await fetch('/api/auth/verify', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (response.ok) {
-            const user = await response.json();
-            dispatch({ type: 'SET_USER', payload: user });
+        const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
+          if (firebaseUser) {
+            // Get user data from Firestore
+            const userData = await firestoreService.getUser(firebaseUser.uid);
+            if (userData) {
+              dispatch({ type: 'SET_USER', payload: userData });
+            } else {
+              // Create user data if it doesn't exist
+              const newUser: User = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                name: firebaseUser.displayName || 'User',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                settings: {
+                  theme: 'dark',
+                  notifications: true,
+                  autoGeneration: true,
+                  emailNotifications: true
+                }
+              };
+              await firestoreService.updateUser(firebaseUser.uid, newUser);
+              dispatch({ type: 'SET_USER', payload: newUser });
+            }
           } else {
-            localStorage.removeItem('aria_token');
+            dispatch({ type: 'SET_USER', payload: null });
           }
-        }
+          dispatch({ type: 'SET_LOADING', payload: false });
+        });
+
+        return unsubscribe;
       } catch (error) {
         console.error('Auth check failed:', error);
-      } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
@@ -82,22 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const { user, token } = await response.json();
-      localStorage.setItem('aria_token', token);
-      dispatch({ type: 'SET_USER', payload: user });
+      await authService.signIn(email, password);
+      // User will be set via onAuthStateChanged
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Login failed' });
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -109,35 +115,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-
-      const { user, token } = await response.json();
-      localStorage.setItem('aria_token', token);
-      dispatch({ type: 'SET_USER', payload: user });
+      await authService.signUp(email, password, name);
+      // User will be set via onAuthStateChanged
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Registration failed' });
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('aria_token');
-    dispatch({ type: 'SET_USER', payload: null });
+  const logout = async () => {
+    try {
+      await authService.signOut();
+      dispatch({ type: 'SET_USER', payload: null });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    dispatch({ type: 'UPDATE_USER', payload: userData });
+  const updateUser = async (userData: Partial<User>) => {
+    if (state.user) {
+      try {
+        await firestoreService.updateUser(state.user.id, userData);
+        dispatch({ type: 'UPDATE_USER', payload: userData });
+      } catch (error) {
+        console.error('Failed to update user:', error);
+      }
+    }
   };
 
   const value: AuthContextType = {

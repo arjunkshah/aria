@@ -1,11 +1,14 @@
 import React from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SparklesIcon } from './components/Icons';
+import { SparklesIcon, UserIcon, LogoutIcon } from './components/Icons';
 import LandingPage from './components/LandingPage';
 import FeaturesPage from './components/FeaturesPage';
 import MainApp from './components/MainApp';
 import ThemeToggleButton from './components/ThemeToggleButton';
+import NotificationButton from './components/NotificationButton';
+import { useAuth } from './contexts/AuthContext';
+import { useTheme } from './contexts/ThemeContext';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -22,6 +25,16 @@ const pageTransition = {
 const App: React.FC = () => {
   const location = useLocation();
   const isAppPage = location.pathname === '/app';
+  const { user, isAuthenticated, logout } = useAuth();
+  const { theme } = useTheme();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-text-primary flex flex-col items-center p-4 sm:p-6 lg:p-8 font-sans antialiased selection:bg-primary/30">
@@ -36,7 +49,39 @@ const App: React.FC = () => {
           <nav className="flex items-center gap-2 sm:gap-4">
             <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 ${isActive ? 'bg-background-secondary shadow-clay-inset text-text-strong' : 'text-text-secondary hover:bg-background-secondary/50 hover:text-text-primary'}`}>Home</NavLink>
             <NavLink to="/features" className={({ isActive }) => `px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 ${isActive ? 'bg-background-secondary shadow-clay-inset text-text-strong' : 'text-text-secondary hover:bg-background-secondary/50 hover:text-text-primary'}`}>Features</NavLink>
-            <NavLink to="/app" className="hidden sm:block px-4 py-2 rounded-lg text-sm sm:text-base font-bold bg-primary text-white shadow-clay hover:bg-primary/90 transition-all">Launch App</NavLink>
+            
+            {isAuthenticated ? (
+              <>
+                <NavLink to="/app" className="hidden sm:block px-4 py-2 rounded-lg text-sm sm:text-base font-bold bg-primary text-white shadow-clay hover:bg-primary/90 transition-all">Dashboard</NavLink>
+                <NotificationButton 
+                  projectId={user?.id} 
+                  userId={user?.id} 
+                />
+                <div className="relative group">
+                  <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-background-secondary shadow-clay hover:shadow-clay-inset transition-all">
+                    <UserIcon className="w-6 h-6 text-text-secondary" />
+                  </button>
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-background-secondary rounded-lg shadow-clay border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="p-3 border-b border-border">
+                      <p className="text-sm font-medium text-text-strong">{user?.name}</p>
+                      <p className="text-xs text-text-secondary">{user?.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-background/50 rounded-md transition-colors"
+                      >
+                        <LogoutIcon className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <NavLink to="/app" className="hidden sm:block px-4 py-2 rounded-lg text-sm sm:text-base font-bold bg-primary text-white shadow-clay hover:bg-primary/90 transition-all">Launch App</NavLink>
+            )}
+            
             <ThemeToggleButton />
           </nav>
         </header>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GithubIcon, SparklesIcon, MessageIcon, BookOpenIcon, ZapIcon } from './Icons';
+import { GitHubIcon, SparklesIcon, MessageIcon, BookOpenIcon, ZapIcon } from './Icons';
 
 const containerVariants = {
   hidden: {},
@@ -43,7 +43,7 @@ const FeaturesPage: React.FC = () => {
         </div>
 
         <motion.div variants={containerVariants} className="grid md:grid-cols-2 gap-8">
-            <FeatureCard title="Direct GitHub Integration" icon={<GithubIcon className="w-7 h-7 text-text-secondary" />}>
+            <FeatureCard title="Direct GitHub Integration" icon={<GitHubIcon className="w-7 h-7 text-text-secondary" />}>
                 Connect any public or private repository using a Personal Access Token. Aria securely fetches your merged pull requests to ensure no contribution is missed.
             </FeatureCard>
             <FeatureCard title="AI-Powered Summarization" icon={<SparklesIcon className="w-7 h-7 text-primary" />}>

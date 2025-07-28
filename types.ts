@@ -43,7 +43,7 @@ export interface AppSettings {
   emailNotifications: boolean;
 }
 
-export interface Notification {
+export interface AppNotification {
   id: number;
   title: string;
   message: string;
@@ -77,6 +77,19 @@ export interface Project {
     emailNotifications: boolean;
     notificationTypes: string[];
   };
+}
+
+export interface Repository {
+  id: string;
+  owner: string;
+  name: string;
+  fullName: string;
+  description?: string;
+  projectId: string;
+  githubToken: string;
+  lastChecked: string;
+  lastChangelogVersion?: string;
+  autoGenEnabled: boolean;
 }
 
 export interface AuthState {
