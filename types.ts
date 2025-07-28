@@ -1,61 +1,94 @@
 export interface Repo {
+  id: string;
   owner: string;
   name: string;
-  id: string; // unique identifier
-  lastUpdated?: string;
-  changelogCount?: number;
+  fullName: string;
+  description?: string;
+  lastUpdated: string;
+  changelogCount: number;
+  autoGenEnabled: boolean;
 }
 
 export interface ConnectedRepo extends Repo {
-  token: string;
-  changelogs: HistoricalChangelog[];
-  lastSync?: string;
-}
-
-export interface PullRequest {
-  id: number;
-  title: string;
-  body: string | null;
-  url: string;
-  author: string;
-  mergedAt: string | null;
+  projectId: string;
+  githubToken: string;
+  lastChecked: string;
+  lastChangelogVersion?: string;
 }
 
 export interface Changelog {
+  id: string;
+  repoId: string;
+  version: string;
+  title: string;
+  description: string;
   features: string[];
   fixes: string[];
   improvements: string[];
+  breaking: string[];
+  generatedAt: string;
+  prCount: number;
 }
 
-export interface HistoricalChangelog {
-  id: string; // e.g., 'v1.2.3'
-  version: string;
-  date: string;
-  pullRequestIds: number[];
-  changelog: Changelog;
+export interface HistoricalChangelog extends Changelog {
   repoId: string;
-}
-
-export type AppStatus = 'initial' | 'loading' | 'error' | 'ready';
-
-export interface ChatMessage {
-  role: 'user' | 'model';
-  parts: { text: string }[];
-  timestamp: number;
+  projectId: string;
+  userId: string;
 }
 
 export interface AppSettings {
-  globalToken?: string;
-  autoSync: boolean;
-  notifications: boolean;
   theme: 'light' | 'dark';
+  notifications: boolean;
+  autoGeneration: boolean;
+  emailNotifications: boolean;
 }
 
 export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  id: number;
   title: string;
   message: string;
-  timestamp: number;
+  type: 'success' | 'error' | 'info' | 'warning';
+  timestamp: string;
   read: boolean;
+  projectId: string;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  createdAt: string;
+  lastLogin: string;
+  settings: AppSettings;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  userId: string;
+  githubToken: string;
+  userEmail: string;
+  createdAt: string;
+  updatedAt: string;
+  settings: {
+    autoGeneration: boolean;
+    emailNotifications: boolean;
+    notificationTypes: string[];
+  };
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+} 
