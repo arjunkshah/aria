@@ -3,14 +3,15 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { User, Project, Repository, Changelog, AppNotification } from '../types';
 
-// Firebase configuration
+// Firebase configuration - Real project settings
 const firebaseConfig = {
-  apiKey: "AIzaSyCd-g3QcP2O9ee-nuPbL45oDJoEx7O3nVI",
-  authDomain: "aria-app.firebaseapp.com",
-  projectId: "aria-app",
-  storageBucket: "aria-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  apiKey: "AIzaSyB_6F82vd6S4PWf3O9fr3MlSDdho6625H0",
+  authDomain: "aria-changelog-reviewer.firebaseapp.com",
+  projectId: "aria-changelog-reviewer",
+  storageBucket: "aria-changelog-reviewer.firebasestorage.app",
+  messagingSenderId: "921213738643",
+  appId: "1:921213738643:web:55cea0c7da2b2a19967766",
+  databaseURL: "https://aria-changelog-reviewer-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
