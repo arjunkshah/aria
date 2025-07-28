@@ -3,7 +3,7 @@ import { Changelog } from '../types';
 import { ClipboardIcon, CheckIcon } from './Icons';
 
 interface ChangelogDisplayProps {
-  changelog: Changelog;
+  changelog: Changelog | null;
   version: string;
 }
 
@@ -28,6 +28,8 @@ const ChangelogDisplay: React.FC<ChangelogDisplayProps> = ({ changelog, version 
   const [copied, setCopied] = useState(false);
 
   const markdownContent = useMemo(() => {
+    if (!changelog) return '';
+    
     let content = `# Changelog - ${version}\n\n`;
     if (changelog.features?.length > 0) {
       content += `## 🚀 Features\n`;
@@ -78,9 +80,9 @@ const ChangelogDisplay: React.FC<ChangelogDisplayProps> = ({ changelog, version 
       </div>
 
       <div>
-        <ChangelogSection title="Features" items={changelog.features} emoji="🚀" />
-        <ChangelogSection title="Fixes" items={changelog.fixes} emoji="🐛" />
-        <ChangelogSection title="Improvements" items={changelog.improvements} emoji="🔧" />
+        <ChangelogSection title="Features" items={changelog.features || []} emoji="🚀" />
+        <ChangelogSection title="Fixes" items={changelog.fixes || []} emoji="🐛" />
+        <ChangelogSection title="Improvements" items={changelog.improvements || []} emoji="🔧" />
       </div>
     </div>
   );

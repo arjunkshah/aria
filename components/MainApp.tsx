@@ -202,7 +202,7 @@ const MainApp: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
             >
-                <ChangelogDisplay changelog={selectedChangelog?.changelog!} version={selectedChangelog?.version!} />
+                <ChangelogDisplay changelog={selectedChangelog?.changelog || null} version={selectedChangelog?.version || 'v1.0.0'} />
             </motion.div>
 
             {/* Right Column: Chat */}
