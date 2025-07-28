@@ -18,7 +18,7 @@ const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all"
+    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all card"
   >
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center gap-3">
@@ -26,14 +26,14 @@ const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo
           <GithubIcon className="w-6 h-6 text-text-secondary" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-text-strong">{repo.owner}/{repo.name}</h3>
-          <p className="text-sm text-text-secondary">
+          <h3 className="text-lg font-bold text-text-strong font-inter">{repo.owner}/{repo.name}</h3>
+          <p className="text-sm text-text-secondary font-inter">
             {repo.changelogCount || 0} changelogs
           </p>
         </div>
       </div>
       {repo.lastSync && (
-        <span className="text-xs text-text-secondary">
+        <span className="text-xs text-text-secondary font-inter">
           {new Date(repo.lastSync).toLocaleDateString()}
         </span>
       )}
@@ -42,9 +42,9 @@ const RepoCard: React.FC<{ repo: ConnectedRepo; onClick: () => void }> = ({ repo
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-        <span className="text-sm text-text-secondary">Connected</span>
+        <span className="text-sm text-text-secondary font-inter">Connected</span>
       </div>
-      <div className="text-xs text-text-secondary">
+      <div className="text-xs text-text-secondary font-inter">
         Last updated: {repo.lastUpdated ? new Date(repo.lastUpdated).toLocaleDateString() : 'Never'}
       </div>
     </div>
@@ -56,14 +56,14 @@ const ConnectRepoCard: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all border-dashed"
+    className="bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border cursor-pointer hover:shadow-clay transition-all border-dashed card"
   >
     <div className="flex flex-col items-center justify-center h-full text-center">
       <div className="w-12 h-12 bg-background rounded-xl shadow-clay flex items-center justify-center mb-4">
         <PlusIcon className="w-6 h-6 text-primary" />
       </div>
-      <h3 className="text-lg font-bold text-text-strong mb-2">Connect Repository</h3>
-      <p className="text-sm text-text-secondary">Add a new GitHub repository to generate changelogs</p>
+      <h3 className="text-lg font-bold text-text-strong mb-2 font-inter">Connect Repository</h3>
+      <p className="text-sm text-text-secondary font-inter">Add a new GitHub repository to generate changelogs</p>
     </div>
   </motion.div>
 );
@@ -106,8 +106,8 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-text-strong mb-2">Repository Gallery</h1>
-          <p className="text-text-secondary">Manage your connected repositories and changelogs</p>
+          <h1 className="text-4xl font-bold text-text-strong mb-2 font-inter">Repository Gallery</h1>
+          <p className="text-text-secondary font-inter text-lg">Manage your connected repositories and changelogs</p>
         </div>
         <div className="flex items-center gap-4">
           {unreadNotifications.length > 0 && (
@@ -120,7 +120,7 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
           )}
           <button
             onClick={onOpenSettings}
-            className="flex items-center gap-2 px-4 py-2 bg-background-secondary text-text-secondary rounded-lg shadow-clay hover:shadow-clay-inset transition-all"
+            className="flex items-center gap-2 px-4 py-3 bg-background-secondary text-text-secondary rounded-lg shadow-clay hover:shadow-clay-inset transition-all btn-secondary"
           >
             <SettingsIcon className="w-5 h-5" />
             Settings
@@ -146,12 +146,12 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-background-secondary rounded-2xl p-8 shadow-clay max-w-md w-full mx-4"
+            className="bg-background-secondary rounded-2xl p-8 shadow-clay max-w-md w-full mx-4 card"
           >
-            <h2 className="text-2xl font-bold text-text-strong mb-6">Connect Repository</h2>
+            <h2 className="text-2xl font-bold text-text-strong mb-6 font-inter">Connect Repository</h2>
             <form onSubmit={handleConnect} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
+                <label className="block text-sm font-medium text-text-primary mb-2 font-inter">
                   Repository URL
                 </label>
                 <input
@@ -159,12 +159,12 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
+                <label className="block text-sm font-medium text-text-primary mb-2 font-inter">
                   Personal Access Token
                 </label>
                 <input
@@ -172,10 +172,10 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="ghp_..."
-                  className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
                   required
                 />
-                <p className="text-xs text-text-secondary mt-2">
+                <p className="text-xs text-text-secondary mt-2 font-inter">
                   Your token is stored securely and used for all repositories
                 </p>
               </div>
@@ -183,14 +183,14 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowConnectModal(false)}
-                  className="flex-1 px-4 py-3 bg-background text-text-secondary rounded-lg shadow-clay hover:shadow-clay-inset transition-all"
+                  className="flex-1 px-4 py-3 bg-background text-text-secondary rounded-lg shadow-clay hover:shadow-clay-inset transition-all btn-secondary font-inter"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isConnecting}
-                  className="flex-1 px-4 py-3 bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:opacity-50 btn-primary font-inter"
                 >
                   {isConnecting ? 'Connecting...' : 'Connect'}
                 </button>

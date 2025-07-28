@@ -247,32 +247,32 @@ const MainApp: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-150px)]">
             {/* Left Column: History */}
             <motion.div 
-                className="lg:col-span-3 bg-background-secondary rounded-2xl p-4 shadow-clay-inset border border-border flex flex-col"
+                className="lg:col-span-3 bg-background-secondary rounded-2xl p-4 shadow-clay-inset border border-border flex flex-col card"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
             >
                 <div className="flex-shrink-0 border-b border-border pb-3 mb-3">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-bold text-text-strong flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-text-strong flex items-center gap-2 font-inter">
                             <BookOpenIcon className="w-5 h-5"/>
                             Changelog History
                         </h2>
                         <button
                             onClick={() => setSelectedRepo(null)}
-                            className="text-xs text-text-secondary hover:text-text-primary"
+                            className="text-xs text-text-secondary hover:text-text-primary font-inter"
                         >
                             ← Back to Gallery
                         </button>
                     </div>
-                    <p className="text-xs text-text-secondary">{selectedRepo.owner}/{selectedRepo.name}</p>
+                    <p className="text-xs text-text-secondary font-inter">{selectedRepo.owner}/{selectedRepo.name}</p>
                 </div>
                 <div className="flex-grow overflow-y-auto space-y-2 pr-2">
                     {selectedRepo.changelogs.map(h => (
                         <motion.button 
                             key={h.id} 
                             onClick={() => setSelectedChangelog(h)} 
-                            className={`w-full text-left p-3 rounded-lg transition-all ${selectedChangelog?.id === h.id ? 'bg-primary/20 text-text-strong' : 'hover:bg-background/50 text-text-primary'}`}
+                            className={`w-full text-left p-3 rounded-lg transition-all font-inter ${selectedChangelog?.id === h.id ? 'bg-primary/20 text-text-strong' : 'hover:bg-background/50 text-text-primary'}`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                         >
@@ -288,18 +288,18 @@ const MainApp: React.FC = () => {
                             value={newVersion}
                             onChange={(e) => setNewVersion(e.target.value)}
                             placeholder="New version (e.g. v1.2.4)"
-                            className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
+                            className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
                         />
                         <button
                             onClick={handleGenerate}
                             disabled={status === 'loading'}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed btn-primary font-inter"
                         >
                             {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
                             {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
                         </button>
                     </div>
-                    {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
+                    {error && <p className="text-red-400 text-xs mt-2 text-center font-inter">{error}</p>}
                 </div>
             </motion.div>
 

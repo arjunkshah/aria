@@ -12,7 +12,12 @@ export function parseRepoUrl(url: string): Repo {
     if (pathParts.length < 2) {
       throw new Error();
     }
-    return { owner: pathParts[0], name: pathParts[1] };
+    // Remove .git extension if present
+    let repoName = pathParts[1];
+    if (repoName.endsWith('.git')) {
+      repoName = repoName.slice(0, -4);
+    }
+    return { owner: pathParts[0], name: repoName };
   } catch (error) {
     throw new Error('Invalid GitHub repository URL. Please use the format https://github.com/owner/repo.');
   }
@@ -30,29 +35,40 @@ async function apiFetch(url: string, token: string, options: RequestInit = {}): 
     });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`GitHub API Error: ${errorData.message || response.statusText}`);
+        let errorMessage = response.statusText;
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.errors?.[0]?.message || errorMessage;
+        } catch {
+            // If we can't parse the error response, use the status text
+        }
+        throw new Error(`GitHub API Error: ${errorMessage}`);
     }
     return response.json();
 }
 
 export async function getMergedPRs(repo: Repo, token: string, since?: string): Promise<PullRequest[]> {
-  let query = `is:pr is:merged repo:${repo.owner}/${repo.name}`;
-  if (since) {
-    const sinceDate = new Date(since).toISOString().split('T')[0];
-    query += ` merged:>=${sinceDate}`;
-  }
+  try {
+    let query = `is:pr is:merged repo:${repo.owner}/${repo.name}`;
+    if (since) {
+      const sinceDate = new Date(since).toISOString().split('T')[0];
+      query += ` merged:>=${sinceDate}`;
+    }
 
-  const url = `${GITHUB_API_URL}/search/issues?q=${encodeURIComponent(query)}&sort=merged&order=desc`;
-  
-  const data = await apiFetch(url, token);
-  
-  return data.items.map((pr: any) => ({
-    id: pr.number,
-    title: pr.title,
-    body: pr.body,
-    url: pr.html_url,
-    author: pr.user.login,
-    mergedAt: pr.pull_request.merged_at
-  }));
+    const url = `${GITHUB_API_URL}/search/issues?q=${encodeURIComponent(query)}&sort=merged&order=desc`;
+    
+    const data = await apiFetch(url, token);
+    
+    return data.items.map((pr: any) => ({
+      id: pr.number,
+      title: pr.title,
+      body: pr.body,
+      url: pr.html_url,
+      author: pr.user.login,
+      mergedAt: pr.pull_request.merged_at
+    }));
+  } catch (error) {
+    console.error('GitHub API Error:', error);
+    throw error;
+  }
 }
