@@ -1,14 +1,39 @@
-# Run and deploy your AI Studio app
+# Changelog - AI-Powered Release Notes
 
-This contains everything you need to run your app locally.
+Generate beautiful, AI-powered changelogs for your GitHub repositories automatically.
 
-## Run Locally
+## Features
 
-**Prerequisites:**  Node.js
+- 🤖 **AI-Powered Generation**: Automatically generate changelogs using advanced AI
+- 🔗 **GitHub Integration**: Connect your repositories with a single click
+- ⚡ **Real-time Updates**: Get instant notifications and automatic generation
+- 🔒 **Secure & Private**: Enterprise-grade security and privacy controls
+- 🎨 **Customizable Templates**: Create custom changelog templates
+- 📱 **Smart Notifications**: Browser and email notifications
 
+## Getting Started
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+4. Open [http://localhost:5173](http://localhost:5173)
+
+## Tech Stack
+
+- **Frontend**: React + TypeScript + Vite
+- **Styling**: Tailwind CSS + Claymorphism
+- **Backend**: Firebase (Auth + Firestore)
+- **AI**: Google Gemini API
+- **Deployment**: Surge.sh
+
+## Live Demo
+
+Visit [https://aria-changelog.surge.sh](https://aria-changelog.surge.sh) to see Changelog in action!
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License.

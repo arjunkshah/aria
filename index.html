@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aria - AI Changelog Companion</title>
+    <title>Changelog - AI-Powered Release Notes</title>
+    <meta name="description" content="Generate beautiful, AI-powered changelogs for your GitHub repositories automatically" />
+    <meta name="keywords" content="changelog, release notes, github, ai, automation" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,19 +20,115 @@
         --text-primary: 215 20% 65%;
         --text-secondary: 215 20% 45%;
         --text-strong: 210 40% 96%;
-        --shadow-1: 222 47% 5%;
-        --shadow-2: 222 47% 20%;
       }
-      html:not(.dark) {
-        --background: 0 0% 96%; /* hsl(0, 0%, 96%) */
-        --background-secondary: 0 0% 100%;
-        --primary: 262 82% 55%;
-        --border: 0 0% 90%;
-        --text-primary: 222 20% 40%;
-        --text-secondary: 222 20% 55%;
-        --text-strong: 222 47% 11%;
-        --shadow-1: 0 0% 85%;
-        --shadow-2: 0 0% 100%;
+
+      .dark {
+        --background: 222 47% 11%;
+        --background-secondary: 222 47% 15%;
+        --primary: 262 82% 60%;
+        --border: 217 33% 22%;
+        --text-primary: 215 20% 65%;
+        --text-secondary: 215 20% 45%;
+        --text-strong: 210 40% 96%;
+      }
+
+      .light {
+        --background: 0 0% 100%;
+        --background-secondary: 210 40% 98%;
+        --primary: 262 82% 60%;
+        --border: 214.3 31.8% 91.4%;
+        --text-primary: 222.2 84% 4.9%;
+        --text-secondary: 215.4 16.3% 46.9%;
+        --text-strong: 222.2 84% 4.9%;
+      }
+
+      * {
+        border-color: hsl(var(--border));
+      }
+
+      body {
+        background-color: hsl(var(--background));
+        color: hsl(var(--text-primary));
+      }
+
+      .bg-background {
+        background-color: hsl(var(--background));
+      }
+
+      .bg-background-secondary {
+        background-color: hsl(var(--background-secondary));
+      }
+
+      .bg-primary {
+        background-color: hsl(var(--primary));
+      }
+
+      .text-text-primary {
+        color: hsl(var(--text-primary));
+      }
+
+      .text-text-secondary {
+        color: hsl(var(--text-secondary));
+      }
+
+      .text-text-strong {
+        color: hsl(var(--text-strong));
+      }
+
+      .text-primary {
+        color: hsl(var(--primary));
+      }
+
+      .border-border {
+        border-color: hsl(var(--border));
+      }
+
+      /* Claymorphism styles */
+      .shadow-clay {
+        box-shadow: 
+          8px 8px 16px rgba(0, 0, 0, 0.3),
+          -8px -8px 16px rgba(255, 255, 255, 0.1);
+      }
+
+      .shadow-clay-inset {
+        box-shadow: 
+          inset 4px 4px 8px rgba(0, 0, 0, 0.3),
+          inset -4px -4px 8px rgba(255, 255, 255, 0.1);
+      }
+
+      .hover\:shadow-clay:hover {
+        box-shadow: 
+          12px 12px 24px rgba(0, 0, 0, 0.4),
+          -12px -12px 24px rgba(255, 255, 255, 0.15);
+      }
+
+      .hover\:shadow-clay-inset:hover {
+        box-shadow: 
+          inset 6px 6px 12px rgba(0, 0, 0, 0.4),
+          inset -6px -6px 12px rgba(255, 255, 255, 0.15);
+      }
+
+      /* Smooth transitions */
+      .transition-all {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: hsl(var(--background-secondary));
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: hsl(var(--primary));
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--primary) / 0.8);
       }
     </style>
     <script>
