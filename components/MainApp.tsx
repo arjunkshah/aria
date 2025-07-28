@@ -130,8 +130,19 @@ const MainApp: React.FC = () => {
         setStatus('loading');
         setError(null);
         try {
+            console.log('Generating changelog for repository:', selectedRepo);
+            console.log('Repository owner:', selectedRepo.owner);
+            console.log('Repository name:', selectedRepo.name);
+            
+            // Clean repository name if it has .git extension
+            let cleanRepo = { ...selectedRepo };
+            if (cleanRepo.name.endsWith('.git')) {
+                cleanRepo.name = cleanRepo.name.slice(0, -4);
+                console.log('Cleaned repository name from:', selectedRepo.name, 'to:', cleanRepo.name);
+            }
+            
             const lastGeneratedDate = selectedRepo.changelogs[0]?.date;
-            const prs = await getMergedPRs(selectedRepo, selectedRepo.token, lastGeneratedDate);
+            const prs = await getMergedPRs(cleanRepo, selectedRepo.token, lastGeneratedDate);
             
             if (prs.length === 0) {
                 setError("No new merged pull requests found since the last changelog.");
@@ -168,7 +179,7 @@ const MainApp: React.FC = () => {
             setStatus('ready');
         } catch (e) {
             const err = e as Error;
-            console.error(err);
+            console.error('Error generating changelog:', err);
             setError(`Failed to generate: ${err.message}`);
             setStatus('ready');
             addNotification({
@@ -263,13 +274,13 @@ const MainApp: React.FC = () => {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <header className="border-b border-border bg-background-secondary/50 backdrop-blur-sm">
+            <header className="border-b border-border bg-background-secondary/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <Logo size="md" />
                         <button
                             onClick={() => setSelectedRepo(null)}
-                            className="text-sm text-text-secondary hover:text-text-primary transition-colors font-inter"
+                            className="text-sm text-text-secondary hover:text-text-primary transition-colors font-inter px-4 py-2 rounded-lg hover:bg-background-secondary"
                         >
                             ← Back to Gallery
                         </button>
@@ -277,83 +288,92 @@ const MainApp: React.FC = () => {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-150px)] p-6">
-                {/* Left Column: History */}
-                <motion.div 
-                    className="lg:col-span-3 bg-background-secondary rounded-2xl p-4 shadow-clay-inset border border-border flex flex-col card"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                >
-                    <div className="flex-shrink-0 border-b border-border pb-3 mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-lg font-bold text-text-strong flex items-center gap-2 font-inter">
-                                <BookOpenIcon className="w-5 h-5"/>
-                                Changelog History
-                            </h2>
+            <div className="max-w-7xl mx-auto p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+                    {/* Left Column: History */}
+                    <motion.div 
+                        className="lg:col-span-3 bg-background-secondary rounded-2xl p-6 shadow-clay-inset border border-border flex flex-col card"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                        <div className="flex-shrink-0 border-b border-border pb-4 mb-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-xl font-bold text-text-strong flex items-center gap-3 font-inter">
+                                    <BookOpenIcon className="w-5 h-5"/>
+                                    Changelog History
+                                </h2>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <p className="text-sm text-text-secondary font-inter">{selectedRepo.owner}/{selectedRepo.name}</p>
+                            </div>
                         </div>
-                        <p className="text-xs text-text-secondary font-inter">{selectedRepo.owner}/{selectedRepo.name}</p>
-                    </div>
-                    <div className="flex-grow overflow-y-auto space-y-2 pr-2">
-                        {selectedRepo.changelogs.map(h => (
-                            <motion.button 
-                                key={h.id} 
-                                onClick={() => setSelectedChangelog(h)} 
-                                className={`w-full text-left p-3 rounded-lg transition-all font-inter ${selectedChangelog?.id === h.id ? 'bg-primary/20 text-text-strong' : 'hover:bg-background/50 text-text-primary'}`}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                <p className="font-bold">{h.version}</p>
-                                <p className="text-xs text-text-secondary">{new Date(h.date).toLocaleDateString()}</p>
-                            </motion.button>
-                        ))}
-                    </div>
-                    <div className="flex-shrink-0 pt-4 border-t border-border">
-                        <div className="space-y-3">
-                            <input
-                                type="text"
-                                value={newVersion}
-                                onChange={(e) => setNewVersion(e.target.value)}
-                                placeholder="New version (e.g. v1.2.4)"
-                                className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
-                            />
-                            <button
-                                onClick={handleGenerate}
-                                disabled={status === 'loading'}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed btn-primary font-inter"
-                            >
-                                {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
-                                {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
-                            </button>
+                        <div className="flex-grow overflow-y-auto space-y-2 pr-2">
+                            {selectedRepo.changelogs.map(h => (
+                                <motion.button 
+                                    key={h.id} 
+                                    onClick={() => setSelectedChangelog(h)} 
+                                    className={`w-full text-left p-4 rounded-xl transition-all font-inter ${
+                                        selectedChangelog?.id === h.id 
+                                            ? 'bg-primary/10 text-text-strong border border-primary/20 shadow-clay' 
+                                            : 'hover:bg-background/50 text-text-primary border border-transparent hover:border-border'
+                                    }`}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <p className="font-bold text-lg">{h.version}</p>
+                                    <p className="text-xs text-text-secondary mt-1">{new Date(h.date).toLocaleDateString()}</p>
+                                </motion.button>
+                            ))}
                         </div>
-                        {error && <p className="text-red-400 text-xs mt-2 text-center font-inter">{error}</p>}
-                    </div>
-                </motion.div>
+                        <div className="flex-shrink-0 pt-4 border-t border-border">
+                            <div className="space-y-4">
+                                <input
+                                    type="text"
+                                    value={newVersion}
+                                    onChange={(e) => setNewVersion(e.target.value)}
+                                    placeholder="New version (e.g. v1.2.4)"
+                                    className="w-full bg-background border border-border text-text-primary rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary input font-inter"
+                                />
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={status === 'loading'}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed btn-primary font-inter"
+                                >
+                                    {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
+                                    {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
+                                </button>
+                            </div>
+                            {error && <p className="text-red-400 text-xs mt-2 text-center font-inter">{error}</p>}
+                        </div>
+                    </motion.div>
 
-                {/* Middle Column: Display */}
-                <motion.div 
-                    className="lg:col-span-5 h-full overflow-y-auto pr-2"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                    <ChangelogDisplay changelog={selectedChangelog?.changelog || null} version={selectedChangelog?.version || 'v1.0.0'} />
-                </motion.div>
+                    {/* Middle Column: Display */}
+                    <motion.div 
+                        className="lg:col-span-5 h-full overflow-y-auto"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                        <ChangelogDisplay changelog={selectedChangelog?.changelog || null} version={selectedChangelog?.version || 'v1.0.0'} />
+                    </motion.div>
 
-                {/* Right Column: Chat */}
-                <motion.div 
-                    className="lg:col-span-4 h-full"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                    <AriaChat 
-                        currentChangelog={selectedChangelog?.changelog || null}
-                        onSendMessage={handleAriaSendMessage}
-                        chatHistory={chatHistory}
-                        isEditing={isEditing}
-                    />
-                </motion.div>
+                    {/* Right Column: Chat */}
+                    <motion.div 
+                        className="lg:col-span-4 h-full"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                        <AriaChat 
+                            currentChangelog={selectedChangelog?.changelog || null}
+                            onSendMessage={handleAriaSendMessage}
+                            chatHistory={chatHistory}
+                            isEditing={isEditing}
+                        />
+                    </motion.div>
+                </div>
             </div>
 
             {/* Settings Modal */}
