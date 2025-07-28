@@ -84,6 +84,9 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
 
   const unreadNotifications = notifications.filter(n => !n.read);
+  
+  // Auto-generation status
+  const autoGenStatus = settings.autoSync && connectedRepos.length > 0;
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +111,15 @@ const RepoGallery: React.FC<RepoGalleryProps> = ({
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-4xl font-bold text-text-strong mb-2 font-inter">Repository Gallery</h1>
-          <p className="text-text-secondary font-inter text-lg">Manage your connected repositories and changelogs</p>
+          <div className="flex items-center gap-4">
+            <p className="text-text-secondary font-inter text-lg">Manage your connected repositories and changelogs</p>
+            {autoGenStatus && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm text-green-400 font-medium font-inter">Auto-Generation Active</span>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {unreadNotifications.length > 0 && (

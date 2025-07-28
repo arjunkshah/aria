@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppSettings } from '../types';
-import { SettingsIcon, SunIcon, MoonIcon, CheckIcon } from './Icons';
+import { SettingsIcon, SunIcon, MoonIcon, CheckIcon, BellIcon, ZapIcon } from './Icons';
+import { notificationService } from '../services/notificationService';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -13,9 +14,14 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, onSaveSettings, onClose, isOpen }) => {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showToken, setShowToken] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<'granted' | 'denied' | 'default'>('default');
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   useEffect(() => {
     setLocalSettings(settings);
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
   }, [settings]);
 
   const handleSave = () => {
@@ -26,6 +32,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSaveSettings, onClose, 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  const handleRequestNotificationPermission = async () => {
+    setIsRequestingPermission(true);
+    try {
+      const granted = await notificationService.requestPermission();
+      setNotificationPermission(granted ? 'granted' : 'denied');
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    } finally {
+      setIsRequestingPermission(false);
     }
   };
 
@@ -89,7 +107,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSaveSettings, onClose, 
                 </p>
               </div>
 
-              {/* Auto Sync */}
+              {/* Auto Generation */}
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -98,10 +116,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSaveSettings, onClose, 
                     onChange={(e) => setLocalSettings(prev => ({ ...prev, autoSync: e.target.checked }))}
                     className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
-                  <span className="text-sm font-medium text-text-primary font-inter">Auto-sync repositories</span>
+                  <div className="flex items-center gap-2">
+                    <ZapIcon className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium text-text-primary font-inter">Auto-generate changelogs</span>
+                  </div>
                 </label>
                 <p className="text-xs text-text-secondary mt-1 ml-7 font-inter">
-                  Automatically check for new pull requests and generate changelogs
+                  Automatically generate changelogs when new pull requests are merged
                 </p>
               </div>
 
@@ -114,12 +135,46 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSaveSettings, onClose, 
                     onChange={(e) => setLocalSettings(prev => ({ ...prev, notifications: e.target.checked }))}
                     className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
-                  <span className="text-sm font-medium text-text-primary font-inter">Enable notifications</span>
+                  <div className="flex items-center gap-2">
+                    <BellIcon className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium text-text-primary font-inter">Enable notifications</span>
+                  </div>
                 </label>
                 <p className="text-xs text-text-secondary mt-1 ml-7 font-inter">
-                  Show notifications when new changelogs are generated
+                  Show browser notifications when new changelogs are generated
                 </p>
               </div>
+
+              {/* Notification Permission */}
+              {localSettings.notifications && (
+                <div className="bg-background rounded-lg p-4 border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <BellIcon className="w-5 h-5 text-text-secondary" />
+                      <span className="text-sm font-medium text-text-primary font-inter">Browser Notifications</span>
+                    </div>
+                    <span className={`text-xs font-inter ${
+                      notificationPermission === 'granted' ? 'text-green-400' : 
+                      notificationPermission === 'denied' ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      {notificationPermission === 'granted' ? 'Enabled' : 
+                       notificationPermission === 'denied' ? 'Blocked' : 'Not set'}
+                    </span>
+                  </div>
+                  {notificationPermission !== 'granted' && (
+                    <button
+                      onClick={handleRequestNotificationPermission}
+                      disabled={isRequestingPermission}
+                      className="w-full px-4 py-2 bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:opacity-50 btn-primary font-inter text-sm"
+                    >
+                      {isRequestingPermission ? 'Requesting...' : 'Enable Notifications'}
+                    </button>
+                  )}
+                  <p className="text-xs text-text-secondary mt-2 font-inter">
+                    Allow browser notifications to receive alerts when changelogs are auto-generated
+                  </p>
+                </div>
+              )}
 
               {/* Theme */}
               <div>

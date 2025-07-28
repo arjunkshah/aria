@@ -4,6 +4,8 @@ import { Chat } from "@google/genai";
 import { ConnectedRepo, HistoricalChangelog, AppStatus, ChatMessage, Changelog, AppSettings, Notification } from '../types';
 import { generateChangelogFromPRs, createAriaChat } from '../services/geminiService';
 import { getMergedPRs, parseRepoUrl } from '../services/githubService';
+import { autoGenerationService } from '../services/autoGenerationService';
+import { notificationService } from '../services/notificationService';
 import RepoGallery from './RepoGallery';
 import Settings from './Settings';
 import ChangelogDisplay from './ChangelogDisplay';
@@ -51,7 +53,58 @@ const MainApp: React.FC = () => {
         }
 
         setAriaChat(createAriaChat());
+
+        // Request notification permission on app start
+        if (settings.notifications) {
+            notificationService.requestPermission();
+        }
     }, []);
+
+    // Set up auto-generation service
+    useEffect(() => {
+        if (settings.autoSync && connectedRepos.length > 0) {
+            autoGenerationService.onChangelogGenerated = (updatedRepo, newChangelog) => {
+                // Update the connected repos
+                const updatedRepos = connectedRepos.map(r => 
+                    r.id === updatedRepo.id ? updatedRepo : r
+                );
+                setConnectedRepos(updatedRepos);
+                saveState('connectedRepos', updatedRepos);
+
+                // Update selected repo if it's the one that was updated
+                if (selectedRepo?.id === updatedRepo.id) {
+                    setSelectedRepo(updatedRepo);
+                    setSelectedChangelog(newChangelog);
+                }
+
+                // Add notification
+                addNotification({
+                    type: 'success',
+                    title: 'Auto-Generated Changelog',
+                    message: `Generated ${newChangelog.version} for ${updatedRepo.owner}/${updatedRepo.name}`
+                });
+            };
+
+            autoGenerationService.start({
+                enabled: settings.autoSync,
+                checkInterval: 5 * 60 * 1000, // 5 minutes
+                repositories: connectedRepos
+            });
+
+            // Show notification that auto-generation is active
+            addNotification({
+                type: 'info',
+                title: 'Auto-Generation Started',
+                message: `Monitoring ${connectedRepos.length} repositories for changes`
+            });
+        } else {
+            autoGenerationService.stop();
+        }
+
+        return () => {
+            autoGenerationService.stop();
+        };
+    }, [settings.autoSync, connectedRepos]);
 
     const saveState = (key: string, value: any) => {
         localStorage.setItem(key, JSON.stringify(value));
@@ -98,6 +151,13 @@ const MainApp: React.FC = () => {
                 const updatedSettings = { ...settings, globalToken: token };
                 setSettings(updatedSettings);
                 saveState('appSettings', updatedSettings);
+            }
+
+            // Update auto-generation service
+            if (settings.autoSync) {
+                autoGenerationService.updateConfig({
+                    repositories: updatedRepos
+                });
             }
 
             addNotification({
@@ -230,6 +290,24 @@ const MainApp: React.FC = () => {
     const handleSaveSettings = (newSettings: AppSettings) => {
         setSettings(newSettings);
         saveState('appSettings', newSettings);
+
+        // Update auto-generation service
+        if (newSettings.autoSync !== settings.autoSync) {
+            if (newSettings.autoSync) {
+                autoGenerationService.start({
+                    enabled: true,
+                    checkInterval: 5 * 60 * 1000,
+                    repositories: connectedRepos
+                });
+            } else {
+                autoGenerationService.stop();
+            }
+        }
+
+        // Request notification permission if enabled
+        if (newSettings.notifications && !settings.notifications) {
+            notificationService.requestPermission();
+        }
     };
 
     const handleMarkNotificationRead = (id: string) => {
