@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Chat } from "@google/genai";
-import { Repo, HistoricalChangelog, AppStatus, ChatMessage, Changelog } from '../types';
+import { ConnectedRepo, HistoricalChangelog, AppStatus, ChatMessage, Changelog, AppSettings, Notification } from '../types';
 import { generateChangelogFromPRs, createAriaChat } from '../services/geminiService';
 import { getMergedPRs, parseRepoUrl } from '../services/githubService';
-import ConnectRepo from './ConnectRepo';
+import RepoGallery from './RepoGallery';
+import Settings from './Settings';
 import ChangelogDisplay from './ChangelogDisplay';
 import AriaChat from './AriaChat';
-import { BookOpenIcon, ZapIcon, ArrowPathIcon } from './Icons';
+import { BookOpenIcon, ZapIcon, ArrowPathIcon, BellIcon } from './Icons';
 
 const MainApp: React.FC = () => {
     const [status, setStatus] = useState<AppStatus>('initial');
     const [error, setError] = useState<string | null>(null);
     
-    const [repo, setRepo] = useState<Repo | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-
-    const [historicalChangelogs, setHistoricalChangelogs] = useState<HistoricalChangelog[]>([]);
+    const [connectedRepos, setConnectedRepos] = useState<ConnectedRepo[]>([]);
+    const [selectedRepo, setSelectedRepo] = useState<ConnectedRepo | null>(null);
     const [selectedChangelog, setSelectedChangelog] = useState<HistoricalChangelog | null>(null);
     const [newVersion, setNewVersion] = useState('v1.0.0');
 
@@ -24,24 +23,32 @@ const MainApp: React.FC = () => {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [isEditing, setIsEditing] = useState(false);
 
-    useEffect(() => {
-        const savedRepo = localStorage.getItem('repo');
-        const savedToken = localStorage.getItem('token');
-        const savedHistory = localStorage.getItem('changelogHistory');
+    const [settings, setSettings] = useState<AppSettings>({
+        globalToken: '',
+        autoSync: true,
+        notifications: true,
+        theme: 'dark'
+    });
 
-        if (savedRepo && savedToken) {
-            const parsedRepo = JSON.parse(savedRepo);
-            setRepo(parsedRepo);
-            setToken(savedToken);
-            if (savedHistory) {
-                const history = JSON.parse(savedHistory);
-                setHistoricalChangelogs(history);
-                if(history.length > 0) {
-                    setSelectedChangelog(history[0]);
-                }
-            }
-            setStatus('ready');
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [showSettings, setShowSettings] = useState(false);
+
+    useEffect(() => {
+        // Load saved data
+        const savedRepos = localStorage.getItem('connectedRepos');
+        const savedSettings = localStorage.getItem('appSettings');
+        const savedNotifications = localStorage.getItem('notifications');
+
+        if (savedRepos) {
+            setConnectedRepos(JSON.parse(savedRepos));
         }
+        if (savedSettings) {
+            setSettings(JSON.parse(savedSettings));
+        }
+        if (savedNotifications) {
+            setNotifications(JSON.parse(savedNotifications));
+        }
+
         setAriaChat(createAriaChat());
     }, []);
 
@@ -49,40 +56,87 @@ const MainApp: React.FC = () => {
         localStorage.setItem(key, JSON.stringify(value));
     };
 
-    const handleConnect = async (repoUrl: string, pat: string) => {
+    const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+        const newNotification: Notification = {
+            ...notification,
+            id: Date.now().toString(),
+            timestamp: Date.now(),
+            read: false
+        };
+        const updatedNotifications = [newNotification, ...notifications];
+        setNotifications(updatedNotifications);
+        saveState('notifications', updatedNotifications);
+    };
+
+    const handleConnectRepo = async (repoUrl: string, token: string) => {
         setStatus('loading');
         setError(null);
         try {
             const parsedRepo = parseRepoUrl(repoUrl);
-            setRepo(parsedRepo);
-            setToken(pat);
+            const repoId = `${parsedRepo.owner}/${parsedRepo.name}`;
+            
+            // Check if repo already exists
+            if (connectedRepos.find(r => r.id === repoId)) {
+                throw new Error('Repository already connected');
+            }
+
+            const newRepo: ConnectedRepo = {
+                ...parsedRepo,
+                id: repoId,
+                token: token,
+                changelogs: [],
+                lastSync: new Date().toISOString()
+            };
+
+            const updatedRepos = [...connectedRepos, newRepo];
+            setConnectedRepos(updatedRepos);
+            saveState('connectedRepos', updatedRepos);
+
+            // Update global token if not set
+            if (!settings.globalToken) {
+                const updatedSettings = { ...settings, globalToken: token };
+                setSettings(updatedSettings);
+                saveState('appSettings', updatedSettings);
+            }
+
+            addNotification({
+                type: 'success',
+                title: 'Repository Connected',
+                message: `Successfully connected ${repoId}`
+            });
+
             setStatus('ready');
-            localStorage.setItem('repo', JSON.stringify(parsedRepo));
-            localStorage.setItem('token', pat);
-            // Reset history for new repo
-            setHistoricalChangelogs([]);
-            setSelectedChangelog(null);
-            localStorage.removeItem('changelogHistory');
         } catch (e) {
             const err = e as Error;
             setError(err.message);
             setStatus('error');
+            addNotification({
+                type: 'error',
+                title: 'Connection Failed',
+                message: err.message
+            });
         }
     };
 
+    const handleSelectRepo = (repo: ConnectedRepo) => {
+        setSelectedRepo(repo);
+        setSelectedChangelog(null);
+        setChatHistory([]);
+    };
+
     const handleGenerate = async () => {
-        if (!repo || !token) return;
+        if (!selectedRepo || !selectedRepo.token) return;
         setStatus('loading');
         setError(null);
         try {
-            const lastGeneratedDate = historicalChangelogs[0]?.date;
-            const prs = await getMergedPRs(repo, token, lastGeneratedDate);
+            const lastGeneratedDate = selectedRepo.changelogs[0]?.date;
+            const prs = await getMergedPRs(selectedRepo, selectedRepo.token, lastGeneratedDate);
             
             if (prs.length === 0) {
-                 setError("No new merged pull requests found since the last changelog.");
-                 setStatus('ready');
-                 setTimeout(() => setError(null), 3000);
-                 return;
+                setError("No new merged pull requests found since the last changelog.");
+                setStatus('ready');
+                setTimeout(() => setError(null), 3000);
+                return;
             }
 
             const changelogContent = await generateChangelogFromPRs(prs, newVersion);
@@ -92,19 +146,35 @@ const MainApp: React.FC = () => {
                 date: new Date().toISOString(),
                 pullRequestIds: prs.map(p => p.id),
                 changelog: changelogContent,
+                repoId: selectedRepo.id,
             };
             
-            const updatedHistory = [newEntry, ...historicalChangelogs];
-            setHistoricalChangelogs(updatedHistory);
+            const updatedChangelogs = [newEntry, ...selectedRepo.changelogs];
+            const updatedRepo = { ...selectedRepo, changelogs: updatedChangelogs, lastSync: new Date().toISOString() };
+            
+            const updatedRepos = connectedRepos.map(r => r.id === selectedRepo.id ? updatedRepo : r);
+            setConnectedRepos(updatedRepos);
+            setSelectedRepo(updatedRepo);
             setSelectedChangelog(newEntry);
-            saveState('changelogHistory', updatedHistory);
-            setStatus('ready');
+            saveState('connectedRepos', updatedRepos);
 
+            addNotification({
+                type: 'success',
+                title: 'Changelog Generated',
+                message: `Generated changelog for ${selectedRepo.owner}/${selectedRepo.name} v${newVersion}`
+            });
+
+            setStatus('ready');
         } catch (e) {
             const err = e as Error;
             console.error(err);
             setError(`Failed to generate: ${err.message}`);
             setStatus('ready');
+            addNotification({
+                type: 'error',
+                title: 'Generation Failed',
+                message: err.message
+            });
         }
     };
 
@@ -125,25 +195,52 @@ const MainApp: React.FC = () => {
             
             const updatedEntry: HistoricalChangelog = { ...selectedChangelog, changelog: editedChangelog };
             
-            const updatedHistory = historicalChangelogs.map(h => h.id === selectedChangelog.id ? updatedEntry : h);
-
-            setHistoricalChangelogs(updatedHistory);
+            const updatedChangelogs = selectedRepo!.changelogs.map(h => h.id === selectedChangelog.id ? updatedEntry : h);
+            const updatedRepo = { ...selectedRepo!, changelogs: updatedChangelogs };
+            
+            const updatedRepos = connectedRepos.map(r => r.id === selectedRepo!.id ? updatedRepo : r);
+            setConnectedRepos(updatedRepos);
+            setSelectedRepo(updatedRepo);
             setSelectedChangelog(updatedEntry);
-            saveState('changelogHistory', updatedHistory);
+            saveState('connectedRepos', updatedRepos);
             setChatHistory(prev => [...prev, modelMessage]);
 
         } catch (e) {
             console.error("Aria chat error:", e);
             const err = e as Error;
             const errorMessage: ChatMessage = { role: 'model', parts: [{ text: `Sorry, I ran into an error: ${err.message}` }], timestamp: Date.now() + 1 };
-             setChatHistory(prev => [...prev, errorMessage]);
+            setChatHistory(prev => [...prev, errorMessage]);
         } finally {
             setIsEditing(false);
         }
     };
 
-    if (!repo || !token) {
-        return <ConnectRepo onConnect={handleConnect} loading={status === 'loading'} />;
+    const handleSaveSettings = (newSettings: AppSettings) => {
+        setSettings(newSettings);
+        saveState('appSettings', newSettings);
+    };
+
+    const handleMarkNotificationRead = (id: string) => {
+        const updatedNotifications = notifications.map(n => 
+            n.id === id ? { ...n, read: true } : n
+        );
+        setNotifications(updatedNotifications);
+        saveState('notifications', updatedNotifications);
+    };
+
+    // Show gallery if no repo is selected
+    if (!selectedRepo) {
+        return (
+            <RepoGallery
+                connectedRepos={connectedRepos}
+                settings={settings}
+                notifications={notifications}
+                onConnectRepo={handleConnectRepo}
+                onSelectRepo={handleSelectRepo}
+                onOpenSettings={() => setShowSettings(true)}
+                onMarkNotificationRead={handleMarkNotificationRead}
+            />
+        );
     }
 
     return (
@@ -156,11 +253,22 @@ const MainApp: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.1 }}
             >
                 <div className="flex-shrink-0 border-b border-border pb-3 mb-3">
-                     <h2 className="text-lg font-bold text-text-strong flex items-center gap-2"><BookOpenIcon className="w-5 h-5"/>Changelog History</h2>
-                     <p className="text-xs text-text-secondary">{repo.owner}/{repo.name}</p>
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-lg font-bold text-text-strong flex items-center gap-2">
+                            <BookOpenIcon className="w-5 h-5"/>
+                            Changelog History
+                        </h2>
+                        <button
+                            onClick={() => setSelectedRepo(null)}
+                            className="text-xs text-text-secondary hover:text-text-primary"
+                        >
+                            ← Back to Gallery
+                        </button>
+                    </div>
+                    <p className="text-xs text-text-secondary">{selectedRepo.owner}/{selectedRepo.name}</p>
                 </div>
                 <div className="flex-grow overflow-y-auto space-y-2 pr-2">
-                    {historicalChangelogs.map(h => (
+                    {selectedRepo.changelogs.map(h => (
                         <motion.button 
                             key={h.id} 
                             onClick={() => setSelectedChangelog(h)} 
@@ -182,16 +290,16 @@ const MainApp: React.FC = () => {
                             placeholder="New version (e.g. v1.2.4)"
                             className="w-full bg-background border border-border text-text-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                         />
-                         <button
+                        <button
                             onClick={handleGenerate}
                             disabled={status === 'loading'}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 font-bold bg-primary text-white rounded-lg shadow-clay hover:bg-primary/90 transition-all disabled:bg-background-secondary disabled:text-text-secondary disabled:shadow-none disabled:cursor-not-allowed"
-                         >
+                        >
                             {status === 'loading' && <ArrowPathIcon className="w-5 h-5 animate-spin"/>}
                             {status === 'loading' ? 'Checking for PRs...' : <><ZapIcon className="w-5 h-5" /> Generate New</>}
                         </button>
                     </div>
-                     {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
+                    {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
                 </div>
             </motion.div>
 
@@ -219,8 +327,17 @@ const MainApp: React.FC = () => {
                     isEditing={isEditing}
                 />
             </motion.div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <Settings
+                    settings={settings}
+                    onSaveSettings={handleSaveSettings}
+                    onClose={() => setShowSettings(false)}
+                />
+            )}
         </div>
     );
 };
 
-export default MainApp;
+export default MainApp; 

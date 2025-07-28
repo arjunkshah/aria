@@ -88,4 +88,4 @@ const ChangelogDisplay: React.FC<ChangelogDisplayProps> = ({ changelog, version 
   );
 };
 
-export default ChangelogDisplay;
+export default ChangelogDisplay; 
